@@ -1,20 +1,25 @@
 library(tidyverse)
 library(httr2)
 library(lubridate)
+library(sf)
 
 # read in data ------------------------------------------------------------
 
-d <- readr::read_csv(file = "data/species_projects_joined_new_13Feb2025.csv", quote = '"') %>%
+d <- species_projects_joined_new %>%
   filter(datasetID != 'USFWS GLRI') %>%
   filter(COLLECTION.db != 'USA') %>% #filter out records that need serious QAQC
   mutate(
     verbatimLatitude = latitude,
     verbatimLongitude = longitude,
     
+    #clean up double negatives from longitude
+    longitude = str_replace(string = longitude, pattern = '--', replacement = '-'),
+    
     #make invalid coordinates NA in DwC terms
     decimalLatitude = case_when(abs(as.numeric(latitude)) > 90 ~ NA_real_, TRUE ~ as.numeric(latitude)),
     decimalLongitude = case_when(abs(as.numeric(longitude)) > 180 ~ NA_real_, TRUE ~ as.numeric(longitude)),
-    tz = 'UTC',
+    tz = 'UTC', #This is a placeholder that will be corrected later. It's purpose is to get around a non-vectorized function
+    
     #clean up sex according to https://doi.org/10.5281/zenodo.14187862
     sex = case_when(
       sex == 'm' ~ 'Male',
@@ -26,30 +31,30 @@ d <- readr::read_csv(file = "data/species_projects_joined_new_13Feb2025.csv", qu
     verbatimEventDate = paste0('time1:', time1, ';', 'time2:', time2)
   )
 
+# Run some checks from errors past
 d %>% filter(abs(decimalLatitude) > 90)
 
-d %>% filter(ID. == 'USGS_DRO664541') %>% glimpse()
-
-#get time zone when there is spatial information
+#get time zone when there is spatial information, otherwise, assume UTC
 with_coords <- d %>% 
   filter(!is.na(decimalLongitude) & !is.na(decimalLatitude))
 
-d$tz[!is.na(d$decimalLongitude) & !is.na(d$decimalLatitude)] <- lutz::tz_lookup_coords(lat = with_coords$decimalLatitude, lon = with_coords$decimalLongitude, method = "accurate")
+d$tz[!is.na(d$decimalLongitude) & !is.na(d$decimalLatitude)] <- lutz::tz_lookup_coords(lat = with_coords$decimalLatitude, 
+                                                                                       lon = with_coords$decimalLongitude, 
+                                                                                       method = "accurate")
+d_time_corrected <- d %>% 
 
-#d[is.na(parse_date_time(d$time1, c("Y","Ym", "Ymd", "YmdH", "YmdHM", "YmdHMs"))),] %>% pull(time1) %>% unique()
-
-#clean up times, some of which are NA
-d <- d %>%
-  
   #filter(!is.na(time1)&!is.na(time2)) %>% 
   mutate(
     
     #convert time to ISO 8601 UTC
     #strip x from times and parse into date-times
-    time1 = str_remove_all(time1, pattern = 'x') %>% parse_date_time(., c("Y","Ym", "Ymd", "YmdH", "YmdHM", "YmdHMs")),
-    time1 = force_tz(time1, tzone = tz),
-    time2 = str_remove_all(time2, pattern = 'x') %>% parse_date_time(., c("Y","Ym", "Ymd", "YmdH", "YmdHM", "YmdHMs")),
-    time2 = force_tz(time2, tzone = tz),
+    time1_clean = str_remove_all(time1, pattern = 'x') %>% 
+      parse_date_time(., c("Y","Ym", "Ymd", "YmdH", "YmdHM", "YmdHMs")),
+    time1 = force_tz(time1_clean, tzone = tz),
+    
+    time2_clean = str_remove_all(time2, pattern = 'x') %>% 
+      parse_date_time(., c("Y","Ym", "Ymd", "YmdH", "YmdHM", "YmdHMs")),
+    time2 = force_tz(time2_clean, tzone = tz),
     
     #wrangle into ISO8601, UTC
     time1UTC = with_tz(time = time1, tzone = 'UTC'),
@@ -64,12 +69,23 @@ d <- d %>%
                                                                    pattern = '\\s', 
                                                                    negate = TRUE) ~ time1UTC_corrected,
                            str_detect(time1UTC_corrected, pattern = '\\s') ~ paste0(time1UTC_corrected, 'Z')),
+    
     time2final = case_when(as.character(time2UTC) != 'NA' & str_detect(time2UTC, 
                                                                        pattern = '\\s', 
                                                                        negate = TRUE) ~ time2UTC%>% as.character(),
                            str_detect(time2UTC, pattern = '\\s') ~ paste0(time2UTC, 'Z')
                            ),
 
+    #replace unknown tz case with time_clean
+    
+    time1final = case_when(
+      is.na(decimalLatitude) | is.na(decimalLongitude) ~ as.character(time1_clean),
+      TRUE ~ time1final),
+    
+    time2final = case_when(
+      is.na(decimalLatitude) | is.na(decimalLongitude) ~ as.character(time2_clean),
+      TRUE ~ time2final),
+    
     eventDate = case_when(!is.na(time1final) & !is.na(time2final) ~ paste0(time1final, '/', time2final) %>%
                             str_replace_all(., pattern = '\\s', replacement = 'T')
                           ),
@@ -84,10 +100,19 @@ d <- d %>%
     
     #reduce those to time1 dates only
     eventDate = case_when(!is.na(badTS) ~ time1final,
-                          TRUE ~ eventDate)
+                          TRUE ~ eventDate),
+    
+    tz = case_when(
+      is.na(decimalLatitude) | is.na(decimalLongitude) ~ NA_character_,
+      TRUE ~ tz),  # keep original tz otherwise
     
   ) %>% glimpse()
 
+
+#look at outcome
+glimpse(d_time_corrected %>% filter(is.na(tz)))
+
+#check for past error
 d %>% filter(ID. == 'USGS_DRO691777') %>% glimpse()
 
 # create lookup table for scientificName ----------------------------------
@@ -120,14 +145,6 @@ patterns_to_filter_out <- c("Deleted",
                             "no ID",
                             "Unknown")
 
-d <- d %>% 
-  mutate(trim2genus = str_remove(string = name, pattern = '\\s.*$'),
-         query_names = case_when(str_detect(string = name, pattern = patterns_to_trim_to_genus) ~ trim2genus, #any flags for unusual names
-                                 TRUE ~ name))
-
-# No_Bees_Found == bees were searched for, may have caught insects, but no bees were found. So the event should be valid, but 'no bees found' 
-# What to do with these?
-
 specs_to_check <- c("cf_Villa",
                     "Specimen_Number_Logged_by_Logan_Name_missing",
                     "Pompilinae_gen.",
@@ -139,11 +156,22 @@ specs_to_check <- c("cf_Villa",
                     "Andrena_Trachandrena")                        
 
 #create list of Ids to double check
-d %>% filter(name %in% specs_to_check) %>% select(ID., COLLECTION.db) %>% distinct() %>% 
-  write_csv(file = paste0('specs_to_check_', Sys.Date(), '.csv'))
+ids_to_check <- d_time_corrected %>% filter(name %in% paste(c(specs_to_check, patterns_to_filter_out), collapse = '|')) %>% select(ID., COLLECTION.db) %>% distinct()
+
+if(nrow(ids_to_check) > 0){
+  write_csv(file = paste0('output/specs_to_check_', Sys.Date(), '.csv'))
+}
+
+d <- d %>% 
+  mutate(trim2genus = str_remove(string = name, pattern = '\\s.*$'),
+         query_names = case_when(str_detect(string = name, pattern = patterns_to_trim_to_genus) ~ trim2genus, #any flags for unusual names
+                                 TRUE ~ name))
+
+# No_Bees_Found == bees were searched for, may have caught insects, but no bees were found. So the event should be valid, but 'no bees found' 
+# What to do with these?
 
 #filter out above list until checked
-query_names <- d %>% filter(!str_detect(string = query_names, pattern = paste(specs_to_check, patterns_to_filter_out, collapse = '|'))) %>% pull(query_names) %>% unique()
+#query_names <- d_time_corrected %>% filter(!str_detect(string = query_names, pattern = paste(specs_to_check, patterns_to_filter_out, collapse = '|'))) %>% pull(query_names) %>% unique()
 
 # Query GBIF backbone - assuming everything is at least Insecta.
 

@@ -1,40 +1,40 @@
-library(dplyr)
-library(readr)
+library(tidyverse)
 
-#import USGS_DRO_Flat.txt file
+#import BIML Flat Export
+biml_flat <- read_delim(file = 'data/USGS_DRO_flat.txt.gz', delim = '$') %>%
+  rename(datasetID = email) #rename email field to datasetID
+
 #import Project_Identifiers_Table.csv
+projID_table <- read_csv(file = 'data/Project_Identifiers_Table.csv') %>%
+  rename(collectionCode = collectionID) %>%  #rename CollectionID field to Darwin Core term, collectionCode
+  bind_rows(
+    tibble(
+      ID = 4,
+      datasetID = 'BIML',
+      collectionCode = 'BIML',
+      datasetName = 'Insect Species Occurrence Data from Multiple Projects Worldwide with Focus on Bees and Wasps in North America',
+      institutionCode = 'USGS',
+      institutionID = 'https://ror.org/035a68863',
+      ownerInstitutionCode = 'USGS',
+      publisher = 'USGS'
+    ) #add row for BIML
+  )
+
+str(projID_table)
 
 #remove all rows of data that do not have species-level IDs
-filteredData <- USGS_DRO_flat %>%
+biml_flat %>%
+  count(!is.na(name))
+
+biml_flat <- biml_flat %>%
     filter(!is.na(name))
 
+# Update the email field, replace all email values that do not match datasetID with "BIML"
+filteredData <- biml_flat %>%
+  mutate(datasetID = ifelse(!(datasetID %in% projID_table$datasetID), "BIML", datasetID))
 
-# head(USGS_DRO_flat)
+glimpse(filteredData)
 
-
-# Update the email field in filteredData - replace all email values that do not match datasetID with "BIML"
-filteredData <- filteredData %>%
-  mutate(email = ifelse(!(email %in% Project_Identifiers_Table$datasetID), "BIML", email))
-
-#rename CollectionID field to collectionCode
-Project_Identifiers_Table <- Project_Identifiers_Table %>%
-    rename(collectionCode = collectionID)
-
-# unique(filteredData$email)
-
-#transform filteredData to dataframe for join
-data.frame(filteredData)
-
-#Inner join of filteredData and project identifiers table based on matching email and datasetID fields
+#Join of filteredData and project identifiers table based on matching datasetID fields
 species_projects_joined_new <- filteredData %>%
-    inner_join(Project_Identifiers_Table, by = c("email"="datasetID"))
-
-#rename email field to datasetID
-species_projects_joined_new<- species_projects_joined_new %>%
-  rename(datasetID=email)
-
-#export table as .csv file
-write.csv(species_projects_joined_new, file='<filepath>/species_projects_joined_new.csv') #replace <filepath> with desired output location
-
-
-#after.csv is exported, upload this file into GitHub project Repo folder titled "data"
+  left_join(x = ., y = projID_table, by = 'datasetID')
