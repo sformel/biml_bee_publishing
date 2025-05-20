@@ -4,72 +4,128 @@ date: today
 author:
   - name: "Paulina Marie Jones"
     orcid: "0009-0008-0135-3824"
-    email: "paulina_jones@fws.gov"
   - name: "Stephen Formel"
     orcid: "0000-0001-7418-1244"
-    email: "sformel@usgs.gov"
+    email: "steve@formeldataservices.com"
 ---
 
 Data Processing Steps for Great Lakes Restoration Initiative – Pollinator Task Force Bee Records Produced by the USGS-USFWS Interagency Native Bee Lab
 
-There are \_\_\_\_ main components to sharing the bee occurrences records associated with the USFWS GLRI project on the Global Biodiversity Information Facility platform.
+There are several main components to sharing the bee occurrences records associated with the USFWS GLRI project on the Global Biodiversity Information Facility platform.
 
-This document will provide details for each step in the data workflow.
+This document details each step in the data workflow, although it is still in development.
 
-## Step 1: Accessing data from the USGS/USFWS Interagency Native Bee Lab (BIML) 
+## Step 1: Accessing data from the USGS/USFWS Interagency Native Bee Lab (BIML)
 
 The occurrences records are provided by BIML. Each specimen is entered into the SQL Server database at BIML using an established workflow. The BIML database captures occurrence and sampling event details using fields that do not follow the Darwin Core standard. The structure of the database requires that project-identifying information be stored in a field titled “email”. When specimens from the GLRI project are entered into the database, the value “USFWS_GLRI” is entered into the email field.
 
-BIML also utilizes a table titled “Project_Identifiers_Table” (PIT) to capture project-level information associated with the specimens being identified. The fields in the PIT are Darwin Core formatted and provide relevant record-level fields (see data dictionary ###).  This table is not part of the SQL Server database.[\[PJ1\]](#_msocom_1)  Prior to starting the data processing workflow, this table will be exported to a file location that can be accessed by the data manager and BIML team.[\[PJ2\]](#_msocom_2) 
+BIML also utilizes a table titled “Project_Identifiers_Table” (PIT) to capture project-level information associated with the specimens being identified. The fields in the PIT are Darwin Core formatted and provide relevant record-level fields. For example:
 
-Once specimen identifications are finalized, the data are ready and ready to be shared with the GLRI team and published to GBIF. The data are exported from the SQL server database in the form of a dollar sign (\$) delimited flat file. This flat file is created by a data workflow that provides some initial QA/QC. [\[PJ3\]](#_msocom_3)  Prior to starting the data processing workflow, the flat file is manually uploaded to a file location that can be accessed by the data manager and BIML team. [\[PJ4\]](#_msocom_4) 
+```{r example-project-table}
+
+library(readr)
+library(knitr)
+
+# Read in the CSV file
+data <- read_csv("data/Project_Identifiers_Table.csv")
+
+# Display a pretty table
+kable(data, caption = "Project Identifiers Table")
+
+```
+
+Currently, this table is not part of the SQL Server database and the table needs to be exported to a location that can be accessed by the people involved in publishiing to Darwin Core.
+
+Once specimen identifications are finalized, the data are ready and ready to be published to GBIF. The data are exported from the SQL server database in the form of a dollar sign (\$) delimited flat file. This flat file is created by a data workflow that provides some initial QA/QC. Prior to starting the data processing workflow, the flat file is manually uploaded to a file location that can be accessed by the data manager and BIML team.
 
 ## Step 2: Cleaning the data and mapping to Darwin Core standard
 
-There are two R scripts that are required to prepare the data for upload into the GBIF Integrated Publishing Toolkit (IPT). The scripts can be accessed in the GitHub Repo folder titled “scripts”. The first script, titled “filter_and_join_tables_BIML_all.R” is used to:
+Generally speaking, the [`publishing_workflow.R`](publishing_workflow.R) script can be run. It will output 7 files into the output folder. Three of these are Darwin Core formatted tables: an event table, and occurrence table, and an extended measurement or fact (eMoF) table. The other four describe quality issues that can be addressed in the following publishing iteration.
 
-1. Remove all records that do not have confirmed species-level identifications present,
+```{r show-publishing-workflow-script, eval=FALSE}
+# Print script as plain text
+cat(readLines("publishing_workflow.R"), sep = "\n")
 
-1. Reassign the value in the email field to “BIML” if the value does not match any of the other datasetID values in the PIT table,
+```
 
-1. Join the details of the PIT table to the records (1:N) based on matching values in the email field of the flat file and the datasetID field in the PIT table, and
+There are three R scripts underlying the workflow script.The scripts can be accessed in the GitHub Repo folder titled “scripts”.
 
-1. Export the new .csv file, titled “species_project_joined_new.csv” for use in the second R script.
+#### [`filter_and_join_tables_BIML_all.R`](scripts/filter_and_join_tables_BIML_all.R)
 
-Once the outputted file is uploaded to the GitHub Repo in the “data” folder, the second R script, titled “crosswalk.R” can be ran. This script is used to:
+1.  **Reads and cleans two datasets**
 
-1. Fix values in the “name” field,
+    -   Imports a flat biodiversity dataset (USGS_DRO_flat.txt.gz) and renames the email field to datasetID.
+    -   Imports a project metadata table (Project_Identifiers_Table.csv), renames collectionID to collectionCode, and manually appends a new row for the BIML dataset.
 
-1. Remove records that do not have valid species-level identifications,
+2.  **Filters and standardizes taxonomic data**
 
-1. Adjust other field values to be compliant with the Darwin Core Standard,
+    -   Removes records without species-level names (name column).
+    -   Replaces any unmatched datasetID values with "BIML" to ensure they align with known project IDs.
 
-1. Maps all fields to the Darwin Core Event Core, Occurrence Extension, and Extended Measurement of Fact standards, and
+3.  **Joins metadata with occurrence records**
 
-1. Outputs three .csv files for each set of records belonging to unique projects based on the datasetID value.
+    -   Merges the cleaned species data with the project metadata table using datasetID as the key to associate each occurrence with project-level metadata.
 
-The GLRI dataset is exported in a set of three .csv files. The first contains the records that will be mapped to the Event Core in the GBIF IPT. The second contains the records that will be mapped to the Occurrence Extension in the GBIF IPT. The third contains the records that will be mapped to the Extended Measurement of Fact in the GBIF IPT. These three files will be used to complete the next step.
+#### [`crosswalk_BIML.R`](scripts/crosswalk_BIML.R)
+
+1.  **Cleans and standardizes biological collection data**
+    -   Filters the dataset to remove records requiring QA/QC.\
+    -   Standardizes geographic coordinates (`decimalLatitude`, `decimalLongitude`).\
+    -   Parses and reconstructs incomplete or partial date-time fields into ISO 8601 format.\
+    -   Adds timezone information using spatial coordinates.\
+    -   Harmonizes categorical fields like `sex` and prepares fields for Darwin Core compliance.
+2.  **Queries external taxonomic and collection metadata**
+    -   Uses the [GBIF Backbone API](https://www.gbif.org/developer/species) to validate and correct scientific names with `rgbif::name_backbone_checklist()`.\
+    -   Accesses the [GRSciColl API](https://www.gbif.org/developer/collections) to retrieve collection metadata based on `datasetID`.
+3.  **Generates Darwin Core Archive components**
+    -   Builds and exports three Darwin Core tables:
+        -   `event`: sampling events, locations, protocols, and temporal context\
+        -   `occ`: taxonomic and occurrence-level information\
+        -   `emof`: measurement or fact extensions (e.g., trap volume, liquid type)\
+    -   Outputs the tables as `.csv.gz` files in the `output/` directory using `write_csv()`.
+
+#### [`BIML_QAQC.R`](scripts/BIML_QAQC.R)
+
+## Summary of Quality Assurance Script
+
+This script performs validation and quality checks on a flat biodiversity data export from BIML.
+
+1. **Loads and parses raw data**  
+   - Imports a delimited text file containing biological occurrence records (`USGS_DRO_flat.txt.gz`).  
+   - Captures and exports any problems detected during file read-in using `problems()` to `BIML_problems_identified_during_read-in.csv`.
+
+2. **Identifies invalid scientific names**  
+   - Uses a regular expression to detect names that do not conform to binomial (or trinomial) scientific name patterns.  
+   - Outputs a summary of flagged names to `BIML_flag_summary_binomial_names.csv`.
+
+3. **Performs QA/QC flagging of problematic records**  
+   - Parses and formats timestamp fields (`time1`, `time2`) with partial date handling and converts them to ISO 8601.  
+   - Computes derived date fields and constructs `eventDate` strings.  
+   - Flags records with various types of potential issues, including:
+     - Out-of-range latitude and longitude  
+     - Time inconsistencies and missing timestamps  
+     - Unlikely collection dates (e.g., before 1900)  
+     - Invalid country or improperly coded collection database values
+
+4. **Summarizes flagged records**  
+   - Transforms the wide-format flag columns into long format.  
+   - Aggregates multiple flags per record into a single pipe-separated summary.  
+   - Produces two outputs:
+     - `BIML_flag_summary_table.csv`: distinct flag combinations with counts  
+     - `BIML_flag_table.csv`: full list of flagged records with flag details
 
 ## Step 3. Creating the GBIF Project and mapping the data in the Integrated Publishing Toolkit (IPT)
 
-The occurrence records are published to GBIF via the Integrated Publishing Toolkit (IPT). Within the IPT, the GLRI Bee project profile is used to:
+The occurrence records are published to GBIF via the [GBIF-US Integrated Publishing Toolkit (IPT)](https://ipt.gbif.us/archive.do?r=usgs-pwrc-biml). Within the IPT, authorized managers can create a Darwin Core Archive (DwC-A) and register it with GBIF. This looks like:
 
-1.      Map the .csv files to each Darwin Core Standard,
+1. Uploading the files
+1. Map the files to Darwin Core
+1. Update any relevant metadata  for the dataset. This becomes the Ecological Metadata Language (EML) file for the Darwin Core Archive.
 
-2.      Produce the Project-level metadata EML file for the Darwin Core Archive,
+If you were doing this for the first time, you would also need to:
 
-3.      Set visibility and publication specifications,
+1. Set visibility and publication specifications,
+1. Register the reasource with GBIF
+1.Assign Resource Manager permissions individuals associated with the project, if needed.
 
-4.      Register the records to GBIF, and
-
-5.      Assign Resource Manager permissions individuals associated with the project.
-
-Resource manager permissions are required to publish data, update project metadata, and adjust visibility and publication settings.
-
- [\[PJ1\]](#_msoanchor_1)With moving the entire DwC mapping and QA/QC into R, the NewBeeBase_DwC is not really needed. We could host this project identifiers table in the NewBeeBase access db. Instead and delete the NewBeeBase_DwC access db.
-
- [\[PJ2\]](#_msoanchor_2)Should we just maintain a copy of this table in the GitHub repo?
-
- [\[PJ3\]](#_msoanchor_3)Do we want to provide a general description of what QA/QC is happening during flat file creation? Will require input from Sam and Pick(?)
-
- [\[PJ4\]](#_msoanchor_4)We could upload this to the GitHub repo too..?
+> Resource manager permissions are required to publish data, update project metadata, and adjust visibility and publication settings. These can be arranged through an IPT admin.
