@@ -1,6 +1,6 @@
 library(tidyverse)
 
-#import BIML Flat Export
+#import BIML Flat Exporta
 biml_flat <- read_delim(file = 'data/USGS_DRO_flat.txt.gz', delim = '$') %>%
   rename(datasetID = email) #rename email field to datasetID
 

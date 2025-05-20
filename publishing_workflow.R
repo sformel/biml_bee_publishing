@@ -1,4 +1,8 @@
 
+# Output QAQC of original data ------------------------------------
+
+source('scripts/BIML_QAQC.R')
+
 # Run filter_and_join_tables_BIML_all.R -----------------------------------
 
 # 1. Remove all records that do not have confirmed species-level identifications present,

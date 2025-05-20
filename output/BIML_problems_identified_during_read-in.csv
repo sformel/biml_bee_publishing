@@ -1,0 +1,55 @@
+row,ID,col,colname,expected,actual
+25222,USGS_DRO025222,5,DeterminedWhen,date in ISO8601,134.192.250.8
+25222,USGS_DRO025222,7,DateScanned,date in ISO8601,-86.0437
+25222,USGS_DRO025222,11,gmt,a double,Michigan
+25222,USGS_DRO025222,28,how0,35 columns,28 columns
+103588,USGS_DRO103588,5,DeterminedWhen,date in ISO8601,64.12.117.20
+103588,USGS_DRO103588,7,DateScanned,date in ISO8601,-75.6094444
+103588,USGS_DRO103588,11,gmt,a double,Pennsylvania
+103588,USGS_DRO103588,13,latitude,a double,Slatington
+103588,USGS_DRO103588,28,how0,35 columns,28 columns
+122477,USGS_DRO122477,5,DeterminedWhen,date in ISO8601,159.189.28.40
+122477,USGS_DRO122477,7,DateScanned,date in ISO8601,-84.87
+122477,USGS_DRO122477,11,gmt,a double,Kentucky
+122477,USGS_DRO122477,13,latitude,a double,Lake Cumberland 4-H Center
+122477,USGS_DRO122477,28,how0,35 columns,28 columns
+133890,USGS_DRO133905,5,DeterminedWhen,date in ISO8601,173.50.9.193
+133890,USGS_DRO133905,7,DateScanned,date in ISO8601,-79.5293333
+133890,USGS_DRO133905,9,DateEntered,date in ISO8601,3154 ft
+133890,USGS_DRO133905,11,gmt,a double,West Virginia
+133890,USGS_DRO133905,13,latitude,a double,Job
+133890,USGS_DRO133905,28,how0,35 columns,28 columns
+142936,USGS_DRO142951,5,DeterminedWhen,date in ISO8601,159.189.28.40
+142936,USGS_DRO142951,7,DateScanned,date in ISO8601,-84.8494
+142936,USGS_DRO142951,11,gmt,a double,Kentucky
+142936,USGS_DRO142951,28,how0,35 columns,28 columns
+160451,USGS_DRO160479,5,DeterminedWhen,date in ISO8601,159.189.28.40
+160451,USGS_DRO160479,7,DateScanned,date in ISO8601,-84.8707
+160451,USGS_DRO160479,11,gmt,a double,Kentucky
+160451,USGS_DRO160479,13,latitude,a double,Lake Cumberland 4-H Center
+160451,USGS_DRO160479,28,how0,35 columns,28 columns
+160469,USGS_DRO160497,5,DeterminedWhen,date in ISO8601,159.189.28.40
+160469,USGS_DRO160497,7,DateScanned,date in ISO8601,-84.8707
+160469,USGS_DRO160497,11,gmt,a double,Kentucky
+160469,USGS_DRO160497,13,latitude,a double,Lake Cumberland 4-H Center
+160469,USGS_DRO160497,28,how0,35 columns,28 columns
+161847,USGS_DRO161875,5,DeterminedWhen,date in ISO8601,159.189.28.40
+161847,USGS_DRO161875,7,DateScanned,date in ISO8601,-83.7165
+161847,USGS_DRO161875,11,gmt,a double,Georgia
+161847,USGS_DRO161875,13,latitude,a double,Hitichi Experimental Forest
+161847,USGS_DRO161875,28,how0,35 columns,28 columns
+489948,USGS_DRO489998,5,DeterminedWhen,date in ISO8601,96.231.140.183
+489948,USGS_DRO489998,7,DateScanned,date in ISO8601,-76.6653
+489948,USGS_DRO489998,11,gmt,a double,Maryland
+489948,USGS_DRO489998,13,latitude,a double,Upper Marlboro
+489948,USGS_DRO489998,28,how0,35 columns,28 columns
+508238,USGS_DRO508288,5,DeterminedWhen,date in ISO8601,159.189.27.52
+508238,USGS_DRO508288,7,DateScanned,date in ISO8601,-86.0564
+508238,USGS_DRO508288,11,gmt,a double,Tennessee
+508238,USGS_DRO508288,13,latitude,a double,Arnold Air Force Base
+508238,USGS_DRO508288,28,how0,35 columns,28 columns
+769703,USGS_DRO769753,5,DeterminedWhen,date in ISO8601,159.189.25.127
+769703,USGS_DRO769753,7,DateScanned,date in ISO8601,-107.7621
+769703,USGS_DRO769753,11,gmt,a double,Montana
+769703,USGS_DRO769753,13,latitude,a double,Charles M. Russell NWR
+769703,USGS_DRO769753,28,how0,35 columns,28 columns

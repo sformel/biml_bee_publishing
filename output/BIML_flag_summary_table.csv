@@ -1,0 +1,8 @@
+flags,record count
+invalid_time2_not_recorded,8841
+invalid_time_range,3747
+invalid_time_not_recorded,1098
+invalid_time1_not_recorded,106
+invalid_latitude,16
+invalid_COLLECTION.db | invalid_time_in_other_field | invalid_time_not_recorded | invalid_country,11
+invalid_date_unlikely,7
