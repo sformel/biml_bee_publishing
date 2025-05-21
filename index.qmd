@@ -7,11 +7,10 @@ author:
   - name: "Stephen Formel"
     orcid: "0000-0001-7418-1244"
     email: "steve@formeldataservices.com"
+format: html
 ---
 
-Data Processing Steps for Great Lakes Restoration Initiative – Pollinator Task Force Bee Records Produced by the USGS-USFWS Interagency Native Bee Lab
-
-There are several main components to sharing the bee occurrences records associated with the USFWS GLRI project on the Global Biodiversity Information Facility platform.
+There are several main components to sharing the bee occurrences records associated with the BIML project on the Global Biodiversity Information Facility platform.
 
 This document details each step in the data workflow, although it is still in development.
 
@@ -22,6 +21,9 @@ The occurrences records are provided by BIML. Each specimen is entered into the 
 BIML also utilizes a table titled “Project_Identifiers_Table” (PIT) to capture project-level information associated with the specimens being identified. The fields in the PIT are Darwin Core formatted and provide relevant record-level fields. For example:
 
 ```{r example-project-table}
+#| echo: false
+#| message: false
+#| warning: false
 
 library(readr)
 library(knitr)
@@ -34,21 +36,25 @@ kable(data, caption = "Project Identifiers Table")
 
 ```
 
-Currently, this table is not part of the SQL Server database and the table needs to be exported to a location that can be accessed by the people involved in publishiing to Darwin Core.
+Currently, this table is not part of the SQL Server database and the table needs to be exported to a location that can be accessed by the people involved in publishing to Darwin Core.
 
 Once specimen identifications are finalized, the data are ready and ready to be published to GBIF. The data are exported from the SQL server database in the form of a dollar sign (\$) delimited flat file. This flat file is created by a data workflow that provides some initial QA/QC. Prior to starting the data processing workflow, the flat file is manually uploaded to a file location that can be accessed by the data manager and BIML team.
 
 ## Step 2: Cleaning the data and mapping to Darwin Core standard
 
-Generally speaking, the [`publishing_workflow.R`](publishing_workflow.R) script can be run. It will output 7 files into the output folder. Three of these are Darwin Core formatted tables: an event table, and occurrence table, and an extended measurement or fact (eMoF) table. The other four describe quality issues that can be addressed in the following publishing iteration.
+#### [`publishing_workflow.R`](publishing_workflow.R)
 
-```{r show-publishing-workflow-script, eval=FALSE}
-# Print script as plain text
+Generally speaking, this script is the only one the needs to be run. The other scripts from which it is comprised are explained below. It will output 7 files into the output folder. Three of these are Darwin Core formatted tables: an event table, and occurrence table, and an extended measurement or fact (eMoF) table. The other four describe quality issues that can be addressed in the following publishing iteration.
+
+```{r}
+#| echo: false
+#| warning: false
+#| class-output: "sourceCode r"
+
 cat(readLines("publishing_workflow.R"), sep = "\n")
-
 ```
 
-There are three R scripts underlying the workflow script.The scripts can be accessed in the GitHub Repo folder titled “scripts”.
+There are three R scripts underlying the workflow script. The scripts can be accessed in the GitHub Repo folder titled “scripts”.
 
 #### [`filter_and_join_tables_BIML_all.R`](scripts/filter_and_join_tables_BIML_all.R)
 
