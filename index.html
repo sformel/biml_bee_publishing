@@ -114,8 +114,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Data Processing Steps for Great Lakes Restoration Initiative – Pollinator Task Force Bee Records Produced by the USGS-USFWS Interagency Native Bee Lab</p>
-<p>There are several main components to sharing the bee occurrences records associated with the USFWS GLRI project on the Global Biodiversity Information Facility platform.</p>
+<p>There are several main components to sharing the bee occurrences records associated with the BIML project on the Global Biodiversity Information Facility platform.</p>
 <p>This document details each step in the data workflow, although it is still in development.</p>
 <section id="step-1-accessing-data-from-the-usgsusfws-interagency-native-bee-lab-biml" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-accessing-data-from-the-usgsusfws-interagency-native-bee-lab-biml">Step 1: Accessing data from the USGS/USFWS Interagency Native Bee Lab (BIML)</h2>
@@ -199,16 +198,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Run filter_and_join_tables_BIML_all.R -----------------------------------</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Remove all records that do not have confirmed species-level identifications present,</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Reassign the value in the email field to “BIML” if the value does not match any of the other datasetID values in the PIT table,</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Join the details of the PIT table to the records (1:N) based on matching values in the email field of the flat file and the datasetID field in the PIT table, and</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Export the new .csv file, titled “species_project_joined_new.csv” for use in the second R script.</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">'scripts/filter_and_join_tables_BIML_all.R'</span>)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># crosswalk data and write out for publication ---------------------------</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">'scripts/crosswalk_BIML.R'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">'scripts/filter_and_join_tables_BIML_all.R'</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># crosswalk data and write out for publication ---------------------------</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">'scripts/crosswalk_BIML.R'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <p>There are three R scripts underlying the workflow script. The scripts can be accessed in the GitHub Repo folder titled “scripts”.</p>
