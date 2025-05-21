@@ -10,7 +10,7 @@
 <meta name="author" content="Stephen Formel">
 <meta name="dcterms.date" content="2025-05-20">
 
-<title>Aligning BIML database to DwC for publication to GBIF</title>
+<title>Aligning BIML Database to Darwin Core for Publication to GBIF</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -84,7 +84,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Aligning BIML database to DwC for publication to GBIF</h1>
+<h1 class="title">Aligning BIML Database to Darwin Core for Publication to GBIF</h1>
 </div>
 
 
@@ -114,12 +114,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>There are several main components to sharing the bee occurrences records associated with the BIML project on the Global Biodiversity Information Facility platform.</p>
-<p>This document details each step in the data workflow, although it is still in development.</p>
+<p>There are several key components involved in sharing the bee occurrence records associated with the BIML project on the Global Biodiversity Information Facility (GBIF) platform.</p>
+<p>This document outlines each step in the data workflow. It is a living document and remains under development.</p>
 <section id="step-1-accessing-data-from-the-usgsusfws-interagency-native-bee-lab-biml" class="level2">
-<h2 class="anchored" data-anchor-id="step-1-accessing-data-from-the-usgsusfws-interagency-native-bee-lab-biml">Step 1: Accessing data from the USGS/USFWS Interagency Native Bee Lab (BIML)</h2>
-<p>The occurrences records are provided by BIML. Each specimen is entered into the SQL Server database at BIML using an established workflow. The BIML database captures occurrence and sampling event details using fields that do not follow the Darwin Core standard. The structure of the database requires that project-identifying information be stored in a field titled “email”. When specimens from the GLRI project are entered into the database, the value “USFWS_GLRI” is entered into the email field.</p>
-<p>BIML also utilizes a table titled “Project_Identifiers_Table” (PIT) to capture project-level information associated with the specimens being identified. The fields in the PIT are Darwin Core formatted and provide relevant record-level fields. For example:</p>
+<h2 class="anchored" data-anchor-id="step-1-accessing-data-from-the-usgsusfws-interagency-native-bee-lab-biml">Step 1: Accessing Data from the USGS/USFWS Interagency Native Bee Lab (BIML)</h2>
+<p>The occurrence records are provided by BIML. Each specimen is entered into the BIML SQL Server database using an established workflow. The BIML database captures occurrence and sampling event details using custom fields that do not conform to the Darwin Core standard. For example, project-identifying information is stored in a field titled <code>email</code>. For example, when specimens from the GLRI project are entered, the value <code>USFWS_GLRI</code> is used in that field.</p>
+<p>BIML also maintains a table titled <code>Project_Identifiers_Table</code> (PIT) to capture project-level metadata for identified specimens. The PIT fields follow Darwin Core standards and supply relevant record-level information. For example:</p>
 <div class="cell">
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -181,14 +181,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </div>
 </div>
-<p>Currently, this table is not part of the SQL Server database and the table needs to be exported to a location that can be accessed by the people involved in publishing to Darwin Core.</p>
-<p>Once specimen identifications are finalized, the data are ready and ready to be published to GBIF. The data are exported from the SQL server database in the form of a dollar sign ($) delimited flat file. This flat file is created by a data workflow that provides some initial QA/QC. Prior to starting the data processing workflow, the flat file is manually uploaded to a file location that can be accessed by the data manager and BIML team.</p>
+<p>Currently, this table is not integrated into the MS Access database and must be exported manually to a shared location accessible by team members involved in the Darwin Core publishing workflow.</p>
+<p>Once specimen identifications are finalized, the data are ready to be published to GBIF. The data are exported from the SQL Server as a dollar sign (<code>$</code>)-delimited flat file. This file is created via a workflow that includes preliminary QA/QC steps. Before data processing begins, the flat file is manually uploaded to a shared location accessible to the data manager and BIML team.</p>
 </section>
-<section id="step-2-cleaning-the-data-and-mapping-to-darwin-core-standard" class="level2">
-<h2 class="anchored" data-anchor-id="step-2-cleaning-the-data-and-mapping-to-darwin-core-standard">Step 2: Cleaning the data and mapping to Darwin Core standard</h2>
-<section id="publishing_workflow.r" class="level4">
-<h4 class="anchored" data-anchor-id="publishing_workflow.r"><a href="publishing_workflow.R"><code>publishing_workflow.R</code></a></h4>
-<p>Generally speaking, this script is the only one the needs to be run. The other scripts from which it is comprised are explained below. It will output 7 files into the output folder. Three of these are Darwin Core formatted tables: an event table, and occurrence table, and an extended measurement or fact (eMoF) table. The other four describe quality issues that can be addressed in the following publishing iteration.</p>
+<section id="step-2-cleaning-the-data-and-mapping-to-darwin-core" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-cleaning-the-data-and-mapping-to-darwin-core">Step 2: Cleaning the Data and Mapping to Darwin Core</h2>
+<section id="publishing_workflow.r" class="level3">
+<h3 class="anchored" data-anchor-id="publishing_workflow.r"><a href="publishing_workflow.R"><code>publishing_workflow.R</code></a></h3>
+<p>In general, this is the only script that needs to be run. It references several supporting scripts (detailed below) and outputs seven files into the <code>output/</code> folder. Three of these are Darwin Core–formatted tables: an event table, an occurrence table, and an extended measurement or fact (eMoF) table. The other four describe quality issues to be addressed in future publishing cycles.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
@@ -205,130 +205,117 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">'scripts/crosswalk_BIML.R'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
-<p>There are three R scripts underlying the workflow script. The scripts can be accessed in the GitHub Repo folder titled “scripts”.</p>
+<p>The <code>publishing_workflow.R</code> script draws from three other R scripts, found in the GitHub repository folder <code>scripts</code>.</p>
 </section>
-<section id="filter_and_join_tables_biml_all.r" class="level4">
-<h4 class="anchored" data-anchor-id="filter_and_join_tables_biml_all.r"><a href="scripts/filter_and_join_tables_BIML_all.R"><code>filter_and_join_tables_BIML_all.R</code></a></h4>
+<section id="filter_and_join_tables_biml_all.r" class="level3">
+<h3 class="anchored" data-anchor-id="filter_and_join_tables_biml_all.r"><a href="scripts/filter_and_join_tables_BIML_all.R"><code>filter_and_join_tables_BIML_all.R</code></a></h3>
 <ol type="1">
-<li><p><strong>Reads and cleans two datasets</strong></p>
+<li><strong>Reads and cleans two datasets</strong>
 <ul>
-<li>Imports a flat biodiversity dataset (USGS_DRO_flat.txt.gz) and renames the email field to datasetID.</li>
-<li>Imports a project metadata table (Project_Identifiers_Table.csv), renames collectionID to collectionCode, and manually appends a new row for the BIML dataset.</li>
+<li>Imports a biodiversity dataset (<code>USGS_DRO_flat.txt.gz</code>) and renames the <code>email</code> field to <code>datasetID</code>.</li>
+<li>Imports a project metadata table (<code>Project_Identifiers_Table.csv</code>), renames <code>collectionID</code> to <code>collectionCode</code>, and manually appends a row for the BIML dataset.</li>
 </ul></li>
-<li><p><strong>Filters and standardizes taxonomic data</strong></p>
+<li><strong>Filters and standardizes taxonomic data</strong>
 <ul>
-<li>Removes records without species-level names (name column).</li>
-<li>Replaces any unmatched datasetID values with “BIML” to ensure they align with known project IDs.</li>
+<li>Removes records lacking species-level names.</li>
+<li>Replaces unmatched <code>datasetID</code> values with <code>"BIML"</code> to ensure proper linkage.</li>
 </ul></li>
-<li><p><strong>Joins metadata with occurrence records</strong></p>
+<li><strong>Joins metadata with occurrence records</strong>
 <ul>
-<li>Merges the cleaned species data with the project metadata table using datasetID as the key to associate each occurrence with project-level metadata.</li>
+<li>Merges the cleaned species data with the project metadata table using <code>datasetID</code> as the join key.</li>
 </ul></li>
 </ol>
 </section>
-<section id="crosswalk_biml.r" class="level4">
-<h4 class="anchored" data-anchor-id="crosswalk_biml.r"><a href="scripts/crosswalk_BIML.R"><code>crosswalk_BIML.R</code></a></h4>
+<section id="crosswalk_biml.r" class="level3">
+<h3 class="anchored" data-anchor-id="crosswalk_biml.r"><a href="scripts/crosswalk_BIML.R"><code>crosswalk_BIML.R</code></a></h3>
 <ol type="1">
-<li><strong>Cleans and standardizes biological collection data</strong>
+<li><strong>Cleans and standardizes collection data</strong>
 <ul>
-<li>Filters the dataset to remove records requiring QA/QC.<br>
-</li>
-<li>Standardizes geographic coordinates (<code>decimalLatitude</code>, <code>decimalLongitude</code>).<br>
-</li>
-<li>Parses and reconstructs incomplete or partial date-time fields into ISO 8601 format.<br>
-</li>
-<li>Adds timezone information using spatial coordinates.<br>
-</li>
-<li>Harmonizes categorical fields like <code>sex</code> and prepares fields for Darwin Core compliance.</li>
+<li>Filters records requiring QA/QC.</li>
+<li>Standardizes geographic coordinates (<code>decimalLatitude</code>, <code>decimalLongitude</code>).</li>
+<li>Parses and reconstructs incomplete timestamps into ISO 8601 format.</li>
+<li>Adds time zone information based on spatial coordinates.</li>
+<li>Harmonizes categorical fields such as <code>sex</code> and prepares all fields for Darwin Core compliance.</li>
 </ul></li>
 <li><strong>Queries external taxonomic and collection metadata</strong>
 <ul>
-<li>Uses the <a href="https://www.gbif.org/developer/species">GBIF Backbone API</a> to validate and correct scientific names with <code>rgbif::name_backbone_checklist()</code>.<br>
-</li>
-<li>Accesses the <a href="https://www.gbif.org/developer/collections">GRSciColl API</a> to retrieve collection metadata based on <code>datasetID</code>.</li>
+<li>Uses the <a href="https://www.gbif.org/developer/species">GBIF Backbone API</a> to validate scientific names via <code>rgbif::name_backbone_checklist()</code>.</li>
+<li>Accesses the <a href="https://www.gbif.org/developer/collections">GRSciColl API</a> to retrieve collection metadata by <code>datasetID</code>.</li>
 </ul></li>
 <li><strong>Generates Darwin Core Archive components</strong>
 <ul>
 <li>Builds and exports three Darwin Core tables:
 <ul>
-<li><code>event</code>: sampling events, locations, protocols, and temporal context<br>
-</li>
-<li><code>occ</code>: taxonomic and occurrence-level information<br>
-</li>
-<li><code>emof</code>: measurement or fact extensions (e.g., trap volume, liquid type)<br>
-</li>
+<li><code>event</code>: sampling events, locations, protocols, and time context</li>
+<li><code>occ</code>: taxonomic and occurrence-level data</li>
+<li><code>emof</code>: extended measurement or fact data (e.g., trap volume, liquid type)</li>
 </ul></li>
-<li>Outputs the tables as <code>.csv.gz</code> files in the <code>output/</code> directory using <code>write_csv()</code>.</li>
+<li>Outputs all files as <code>.csv.gz</code> into the <code>output/</code> directory.</li>
 </ul></li>
 </ol>
 </section>
-<section id="biml_qaqc.r" class="level4">
-<h4 class="anchored" data-anchor-id="biml_qaqc.r"><a href="scripts/BIML_QAQC.R"><code>BIML_QAQC.R</code></a></h4>
-</section>
-</section>
-<section id="summary-of-quality-assurance-script" class="level2">
-<h2 class="anchored" data-anchor-id="summary-of-quality-assurance-script">Summary of Quality Assurance Script</h2>
-<p>This script performs validation and quality checks on a flat biodiversity data export from BIML.</p>
+<section id="biml_qaqc.r" class="level3">
+<h3 class="anchored" data-anchor-id="biml_qaqc.r"><a href="scripts/BIML_QAQC.R"><code>BIML_QAQC.R</code></a></h3>
+<section id="summary-of-quality-assurance-script" class="level4">
+<h4 class="anchored" data-anchor-id="summary-of-quality-assurance-script">Summary of Quality Assurance Script</h4>
+<p>This script performs validation and quality checks on a biodiversity data export from BIML.</p>
 <ol type="1">
 <li><strong>Loads and parses raw data</strong>
 <ul>
-<li>Imports a delimited text file containing biological occurrence records (<code>USGS_DRO_flat.txt.gz</code>).<br>
-</li>
-<li>Captures and exports any problems detected during file read-in using <code>problems()</code> to <code>BIML_problems_identified_during_read-in.csv</code>.</li>
+<li>Imports the <code>USGS_DRO_flat.txt.gz</code> file containing biological occurrence records.</li>
+<li>Logs problems encountered during read-in using <code>problems()</code>, saved as <code>BIML_problems_identified_during_read-in.csv</code>.</li>
 </ul></li>
-<li><strong>Identifies invalid scientific names</strong>
+<li><strong>Flags invalid scientific names</strong>
 <ul>
-<li>Uses a regular expression to detect names that do not conform to binomial (or trinomial) scientific name patterns.<br>
-</li>
-<li>Outputs a summary of flagged names to <code>BIML_flag_summary_binomial_names.csv</code>.</li>
+<li>Uses a regular expression to identify names not conforming to binomial (or trinomial) format.</li>
+<li>Outputs summary of flagged names to <code>BIML_flag_summary_binomial_names.csv</code>.</li>
 </ul></li>
-<li><strong>Performs QA/QC flagging of problematic records</strong>
+<li><strong>Performs QA/QC flagging</strong>
 <ul>
-<li>Parses and formats timestamp fields (<code>time1</code>, <code>time2</code>) with partial date handling and converts them to ISO 8601.<br>
-</li>
-<li>Computes derived date fields and constructs <code>eventDate</code> strings.<br>
-</li>
-<li>Flags records with various types of potential issues, including:
+<li>Parses and formats <code>time1</code> and <code>time2</code> fields.</li>
+<li>Constructs ISO 8601 <code>eventDate</code> strings.</li>
+<li>Flags records with:
 <ul>
-<li>Out-of-range latitude and longitude<br>
-</li>
-<li>Time inconsistencies and missing timestamps<br>
-</li>
-<li>Unlikely collection dates (e.g., before 1900)<br>
-</li>
-<li>Invalid country or improperly coded collection database values</li>
+<li>Out-of-range coordinates</li>
+<li>Inconsistent or missing timestamps</li>
+<li>Pre-1900 dates</li>
+<li>Invalid country or improperly coded fields</li>
 </ul></li>
 </ul></li>
 <li><strong>Summarizes flagged records</strong>
 <ul>
-<li>Transforms the wide-format flag columns into long format.<br>
-</li>
-<li>Aggregates multiple flags per record into a single pipe-separated summary.<br>
-</li>
-<li>Produces two outputs:
+<li>Transforms wide-format flags into long format.</li>
+<li>Aggregates multiple flags into a pipe-separated string per record.</li>
+<li>Outputs:
 <ul>
-<li><code>BIML_flag_summary_table.csv</code>: distinct flag combinations with counts<br>
-</li>
-<li><code>BIML_flag_table.csv</code>: full list of flagged records with flag details</li>
+<li><code>BIML_flag_summary_table.csv</code>: distinct flag combinations with counts</li>
+<li><code>BIML_flag_table.csv</code>: full table of flagged records</li>
 </ul></li>
 </ul></li>
 </ol>
 </section>
-<section id="step-3.-creating-the-gbif-project-and-mapping-the-data-in-the-integrated-publishing-toolkit-ipt" class="level2">
-<h2 class="anchored" data-anchor-id="step-3.-creating-the-gbif-project-and-mapping-the-data-in-the-integrated-publishing-toolkit-ipt">Step 3. Creating the GBIF Project and mapping the data in the Integrated Publishing Toolkit (IPT)</h2>
-<p>The occurrence records are published to GBIF via the <a href="https://ipt.gbif.us/archive.do?r=usgs-pwrc-biml">GBIF-US Integrated Publishing Toolkit (IPT)</a>. Within the IPT, authorized managers can create a Darwin Core Archive (DwC-A) and register it with GBIF. This looks like:</p>
+</section>
+</section>
+<section id="step-3-creating-the-gbif-project-and-mapping-data-in-the-ipt" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-creating-the-gbif-project-and-mapping-data-in-the-ipt">Step 3: Creating the GBIF Project and Mapping Data in the IPT</h2>
+<p>The occurrence records are published to GBIF via the <a href="https://ipt.gbif.us/archive.do?r=usgs-pwrc-biml">GBIF-US Integrated Publishing Toolkit (IPT)</a>. Within the IPT, authorized managers can create a Darwin Core Archive (DwC-A) and register it with GBIF. This includes:</p>
 <ol type="1">
-<li>Uploading the files</li>
-<li>Map the files to Darwin Core</li>
-<li>Update any relevant metadata for the dataset. This becomes the Ecological Metadata Language (EML) file for the Darwin Core Archive.</li>
+<li>Uploading the Darwin Core tables<br>
+</li>
+<li>Mapping columns to Darwin Core terms<br>
+</li>
+<li>Updating dataset metadata (which becomes the EML file for the archive)</li>
 </ol>
-<p>If you were doing this for the first time, you would also need to:</p>
+<p>If you are publishing for the first time, you’ll also need to:</p>
 <ol type="1">
-<li>Set visibility and publication specifications,</li>
-<li>Register the reasource with GBIF 1.Assign Resource Manager permissions individuals associated with the project, if needed.</li>
+<li>Set visibility and publication status<br>
+</li>
+<li>Register the resource with GBIF<br>
+</li>
+<li>Assign Resource Manager permissions to relevant individuals</li>
 </ol>
 <blockquote class="blockquote">
-<p>Resource manager permissions are required to publish data, update project metadata, and adjust visibility and publication settings. These can be arranged through an IPT admin.</p>
+<p>Resource Manager permissions are required to publish data, update metadata, and adjust visibility settings. These permissions can be granted by an IPT administrator.</p>
 </blockquote>
 </section>
 

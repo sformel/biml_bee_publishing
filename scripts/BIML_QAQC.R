@@ -74,6 +74,8 @@ FLAGGED <- d %>%
     invalid_longitude = case_when(
       abs(as.numeric(longitude)) > 180 | abs(as.numeric(longitude)) < 0 ~ 1, .default = 0),
     
+    invalid_longitude_double_negative = case_when(stringr::str_detect(string = longitude, pattern = '--') ~ 1, .default = 0),
+    
     invalid_time_range = case_when(
       (day > day(time2) & month >= month(time2) & year >= year(time2)) |
         (month > month(time2) & year >= year(time2)) |
